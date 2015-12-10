@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete stream;
 }
 
 void MainWindow::createVector(const char *input)
@@ -36,40 +37,49 @@ void MainWindow::calculateContainers()
 {
     // QVector<Element> elements;
     QVector<Container> containers;
-    nfa(weights,false);
-    ffa(weights,false);
-    wfa(weights,false);
-    bfa(weights,false);
+    createTable(nfa(weights,false),"nfa");
+     createTable(nfa(weights,true),"nfa sorted");
+    createTable(ffa(weights,false),"ffa");
+     createTable(ffa(weights,true),"ffa sorted");
+    createTable(wfa(weights,false),"wfa");
+     createTable(wfa(weights,true),"wfa sorted");
+    createTable(bfa(weights,false),"bfa");
+     createTable(bfa(weights,true),"bfa sorted");
+
     close();
 }
 
 
 void MainWindow::on_pushButton_clicked()
 {
+     createVector(varAll);
     createVector(var1);
     createVector(var2);
     createVector(var3);
     qDebug()<<"vectorAll "<<varAll;
-    createVector(varAll);
+
+
     file->close();
 
 }
 bool lessThan(const int &a,const int &b)
 {
-    return a<b;
+    return b<a;
 }
 
-void MainWindow::ffa(QVector<int> _weights, bool sort)
+QVector<Container> MainWindow::ffa(QVector<int> _weights, bool sort)
 {
 
     int complexity = 0;
     QVector<Container> containers;
     containers.append(Container());
+    qDebug()<<_weights;
     if(sort)
     {
-        qSort(_weights.begin(),_weights.end());
+        std::sort(_weights.begin(),_weights.end(),lessThan);
         complexity+=_weights.size()*log(_weights.size());
     }
+      qDebug()<<_weights;
     for(int i=0;i<_weights.size();++i)
     {
         complexity++;
@@ -96,19 +106,19 @@ void MainWindow::ffa(QVector<int> _weights, bool sort)
         }
     }
     qDebug()<<"ffa"<< containers.size();
-    createTable(containers);
 
+    return containers;
 
 }
 
-void MainWindow::nfa(QVector<int> _weights, bool sort)
+QVector<Container> MainWindow::nfa(QVector<int> _weights, bool sort)
 {
     int complexity = 0;
     QVector<Container> containers;
     containers.append(Container());
     if(sort)
     {
-        qSort(_weights.begin(),_weights.end());
+       std::sort(_weights.begin(),_weights.end(),lessThan);
         complexity+=_weights.size()*log(_weights.size());
     }
     for(int i=0;i<_weights.size();++i)
@@ -121,16 +131,17 @@ void MainWindow::nfa(QVector<int> _weights, bool sort)
         }
     }
     qDebug()<<"nfa"<< containers.size();
+     return containers;
 }
 
-void MainWindow::wfa(QVector<int> _weights, bool sort)
+QVector<Container> MainWindow::wfa(QVector<int> _weights, bool sort)
 {
     int complexity = 0;
     QVector<Container> containers;
     containers.append(Container());
     if(sort)
     {
-        qSort(_weights.begin(),_weights.end());
+       std::sort(_weights.begin(),_weights.end(),lessThan);
         complexity+=_weights.size()*log(_weights.size());
     }
 
@@ -175,17 +186,18 @@ void MainWindow::wfa(QVector<int> _weights, bool sort)
 
     }
     qDebug()<<"wfa"<< containers.size();
+     return containers;
 
 }
 
-void MainWindow::bfa(QVector<int> _weights, bool sort)
+QVector<Container> MainWindow::bfa(QVector<int> _weights, bool sort)
 {
     int complexity = 0;
     QVector<Container> containers;
     containers.append(Container());
     if(sort)
     {
-        qSort(_weights.begin(),_weights.end());
+       std::sort(_weights.begin(),_weights.end(),lessThan);
         complexity+=_weights.size()*log(_weights.size());
     }
 
@@ -230,6 +242,7 @@ void MainWindow::bfa(QVector<int> _weights, bool sort)
 
     }
     qDebug()<<"bfa"<< containers.size();
+     return containers;
 }
 
 void MainWindow::printer()
@@ -238,12 +251,14 @@ void MainWindow::printer()
     if(!file->open(QIODevice::Text|QIODevice::WriteOnly))
         return;
         stream = new QTextStream(file);
-        *stream<<"<html>\n<head><link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css\" integrity=\"sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7\" crossorigin=\"anonymous\"><style>td{width:20px;text-align:center;}</style></head>\n<body>"  ;
+        *stream<<"<html>\n<head><link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css\" integrity=\"sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7\" crossorigin=\"anonymous\"><style>td{width:20px;text-align:center;}.table>tbody>tr>td{padding:0;}</style><script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script><script src=\"http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js\"></script></head>\n<body><div class=\"container-fluid\" width=\"5000px\"\>";
+
 
 }
 
-void MainWindow::createTable(QVector<Container> &containers)
-{   *stream<<"<table border=\"1\" class=\"table\">";
+void MainWindow::createTable(QVector<Container> containers, QString algorithm)
+{   *stream<<"<div class=\"row-fluid\"><div class=\"col-lg-8\"><table border=\"1\" class=\"table table-responsive\" padding=\"0\"><h3>"+algorithm+"</h3>";
+     QList<int>weightsForContainer;
      for(int i =0;i<containers.size();++i)
     {
         *stream<<"<tr>";
@@ -265,7 +280,20 @@ void MainWindow::createTable(QVector<Container> &containers)
             *stream <<"<td> </td>";
         }
         *stream<<"</tr>";
+       weightsForContainer<<Container::size -containers.at(i).empty;
+
 
     }
-     *stream <<"</table>";
+     *stream <<"</table></div><div class=\"col-lg-4\"><table border=\"1\" class=\"table table-responsive\">";
+     for(int i =0;i<containers.size();++i)
+    {
+          *stream<<"<tr>";
+           *stream <<QString("<td>%1 </td>").arg(weightsForContainer.at(i));
+          *stream<<"</tr>";
+
+     }
+      *stream <<QString(tr("<h3>Containers Counts: %1</h3>")).arg(containers.size());
+      *stream <<"</table>";
+
+     *stream << "</div></div>";
 }

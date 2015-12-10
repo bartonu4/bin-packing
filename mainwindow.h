@@ -51,12 +51,12 @@ void createVector(const char *input);
 void calculateContainers();
 private slots:
 void on_pushButton_clicked();
-void ffa(QVector<int> _weights, bool sort);
-void nfa(QVector<int> _weights, bool sort);
-void wfa(QVector<int> _weights, bool sort);
-void bfa(QVector<int> _weights, bool sort);
+QVector<Container> ffa(QVector<int> _weights, bool sort);
+QVector<Container> nfa(QVector<int> _weights, bool sort);
+QVector<Container> wfa(QVector<int> _weights, bool sort);
+QVector<Container> bfa(QVector<int> _weights, bool sort);
 void printer();
-void createTable(QVector<Container> &containers);
+void createTable(QVector<Container> containers, QString algorithm);
 private:
     Ui::MainWindow *ui;
      QVector<int> weights;
