@@ -36,15 +36,26 @@ void MainWindow::createVector(const char *input)
 void MainWindow::calculateContainers()
 {
     // QVector<Element> elements;
-    QVector<Container> containers;
-    createTable(nfa(weights,false),"nfa");
-     createTable(nfa(weights,true),"nfa sorted");
-    createTable(ffa(weights,false),"ffa");
-     createTable(ffa(weights,true),"ffa sorted");
-    createTable(wfa(weights,false),"wfa");
-     createTable(wfa(weights,true),"wfa sorted");
-    createTable(bfa(weights,false),"bfa");
-     createTable(bfa(weights,true),"bfa sorted");
+    // containers;
+    QPair<QVector<Container>, int> pair;
+    pair =nfa(weights,false);
+    createTable(pair.first,"nfa",pair.second);
+    pair = nfa(weights,true);
+    createTable(pair.first,"nfa sorted",pair.second);
+   pair = ffa(weights,false);
+   createTable(pair.first,"ffa",pair.second);
+   pair  = ffa(weights,true);
+   createTable(pair.first,"ffa sorted",pair.second);
+   pair = wfa(weights,false);
+   createTable(pair.first,"wfa",pair.second);
+   pair =wfa(weights,true);
+   createTable(pair.first,"wfa sorted",pair.second);
+   pair = bfa(weights,false);
+   createTable(pair.first,"bfa",pair.second);
+   pair =bfa(weights,true);
+   createTable(pair.first,"bfa sorted",pair.second);
+
+
 
     close();
 }
@@ -67,7 +78,8 @@ bool lessThan(const int &a,const int &b)
     return b<a;
 }
 
-QVector<Container> MainWindow::ffa(QVector<int> _weights, bool sort)
+
+QPair<QVector<Container>,int> MainWindow::ffa(QVector<int> _weights, bool sort)
 {
 
     int complexity = 0;
@@ -106,12 +118,13 @@ QVector<Container> MainWindow::ffa(QVector<int> _weights, bool sort)
         }
     }
     qDebug()<<"ffa"<< containers.size();
-
-    return containers;
+complex.push_back(complexity);
+    return  QPair<QVector<Container>,int> (containers,complexity);
 
 }
 
-QVector<Container> MainWindow::nfa(QVector<int> _weights, bool sort)
+
+QPair<QVector<Container>,int> MainWindow::nfa(QVector<int> _weights, bool sort)
 {
     int complexity = 0;
     QVector<Container> containers;
@@ -130,11 +143,12 @@ QVector<Container> MainWindow::nfa(QVector<int> _weights, bool sort)
             containers.last().addElement(Element(i,_weights.at(i)));
         }
     }
-    qDebug()<<"nfa"<< containers.size();
-     return containers;
+    qDebug()<<"nfa"<< containers.size();complex.push_back(complexity);
+      return  QPair<QVector<Container>,int> (containers,complexity);
 }
 
-QVector<Container> MainWindow::wfa(QVector<int> _weights, bool sort)
+
+QPair<QVector<Container>,int> MainWindow::wfa(QVector<int> _weights, bool sort)
 {
     int complexity = 0;
     QVector<Container> containers;
@@ -186,11 +200,12 @@ QVector<Container> MainWindow::wfa(QVector<int> _weights, bool sort)
 
     }
     qDebug()<<"wfa"<< containers.size();
-     return containers;
+    complex.push_back(complexity);
+    return  QPair<QVector<Container>,int> (containers,complexity);
 
 }
 
-QVector<Container> MainWindow::bfa(QVector<int> _weights, bool sort)
+QPair<QVector<Container>,int> MainWindow::bfa(QVector<int> _weights, bool sort)
 {
     int complexity = 0;
     QVector<Container> containers;
@@ -240,9 +255,9 @@ QVector<Container> MainWindow::bfa(QVector<int> _weights, bool sort)
         }
 
 
-    }
+    }complex.push_back(complexity);
     qDebug()<<"bfa"<< containers.size();
-     return containers;
+     return  QPair<QVector<Container>,int> (containers,complexity);
 }
 
 void MainWindow::printer()
@@ -251,12 +266,12 @@ void MainWindow::printer()
     if(!file->open(QIODevice::Text|QIODevice::WriteOnly))
         return;
         stream = new QTextStream(file);
-        *stream<<"<html>\n<head><link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css\" integrity=\"sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7\" crossorigin=\"anonymous\"><style>td{width:20px;text-align:center;}.table>tbody>tr>td{padding:0;}</style><script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script><script src=\"http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js\"></script></head>\n<body><div class=\"container-fluid\" width=\"5000px\"\>";
+        *stream<<"<html>\n<head><link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css\" integrity=\"sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7\" crossorigin=\"anonymous\"><style>td{width:20px;text-align:center;}.table>tbody>tr>td{padding:0;font-weight:800}</style><script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script><script src=\"http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js\"></script></head>\n<body><div class=\"container-fluid\" width=\"5000px\"\>";
 
 
 }
 
-void MainWindow::createTable(QVector<Container> containers, QString algorithm)
+void MainWindow::createTable(QVector<Container> containers, QString algorithm,int complexity)
 {   *stream<<"<div class=\"row-fluid\"><div class=\"col-lg-8\"><table border=\"1\" class=\"table table-responsive\" padding=\"0\"><h3>"+algorithm+"</h3>";
      QList<int>weightsForContainer;
      for(int i =0;i<containers.size();++i)
@@ -282,9 +297,11 @@ void MainWindow::createTable(QVector<Container> containers, QString algorithm)
         *stream<<"</tr>";
        weightsForContainer<<Container::size -containers.at(i).empty;
 
-
     }
-     *stream <<"</table></div><div class=\"col-lg-4\"><table border=\"1\" class=\"table table-responsive\">";
+     QString cmpl ;
+     cmpl =QString(("<p>Complexity %1</p>")).arg(complexity);
+
+     *stream <<"</table>""</div><div class=\"col-lg-4\"><table border=\"1\" class=\"table table-responsive\">";
      for(int i =0;i<containers.size();++i)
     {
           *stream<<"<tr>";
@@ -295,5 +312,5 @@ void MainWindow::createTable(QVector<Container> containers, QString algorithm)
       *stream <<QString(tr("<h3>Containers Counts: %1</h3>")).arg(containers.size());
       *stream <<"</table>";
 
-     *stream << "</div></div>";
+     *stream << "</div></div><div class=\"row\">"+cmpl+"</div>";
 }
